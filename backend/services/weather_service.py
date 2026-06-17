@@ -2,10 +2,71 @@ import httpx
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from models.weather import WeatherData
+from models.schemas import ParsedWeatherData, DayWeather
 from typing import Dict, Any, Tuple
+from pydantic import ValidationError
 
-WTTR_API_URL = "https://wttr.in/{city}?format=j2"
+WTTR_API_URL = "https://wttr.in/{city}?format=j1"
 CACHE_TTL_HOURS = 1
+
+
+def parse_weather_response(city: str, api_response: Dict[str, Any]) -> ParsedWeatherData:
+    """
+    Parst die wttr.in API Response in ein strukturiertes Objekt.
+    Extrahiert nur die relevanten Daten.
+    
+    Args:
+        city: Stadtname
+        api_response: JSON-Response von wttr.in
+        
+    Returns:
+        ParsedWeatherData mit strukturierten Wetterdaten
+        
+    Raises:
+        ValueError: Falls die Antwort nicht geparst werden kann
+    """
+    try:
+        # Hole aktuelle Bedingungen
+        current_condition = api_response["current_condition"][0]
+        nearest_area = api_response["nearest_area"][0]
+        
+        # Parse die Forecast-Tage
+        forecast_days = []
+        for day_data in api_response["weather"][:3]:  # Nimm die nächsten 3 Tage
+            try:
+                day_weather = DayWeather(
+                    date=day_data["date"],
+                    maxtemp_C=day_data["maxtempC"],
+                    mintemp_C=day_data["mintempC"],
+                    avgtemp_C=day_data["avgtempC"],
+                    condition= day_data["hourly"][0]["weatherDesc"][0]["value"] if day_data["hourly"] and day_data["hourly"][0]["weatherDesc"] else "Unknown",
+                )
+                forecast_days.append(day_weather)
+            except (KeyError, IndexError):
+                continue
+        
+        # Erstelle das ParsedWeatherData Objekt
+        parsed_data = ParsedWeatherData(
+            city=city,
+            country=nearest_area["country"][0]["value"],
+            temperature=float(current_condition["temp_C"]),
+            feels_like=float(current_condition["FeelsLikeC"]),
+            condition=current_condition["weatherDesc"][0]["value"],
+            humidity=int(current_condition["humidity"]),
+            wind_speed=float(current_condition["windspeedKmph"]),
+            wind_direction=current_condition["winddir16Point"],
+            precipitation=float(current_condition["precipMM"]),
+            pressure=int(current_condition["pressure"]),
+            uv_index=int(current_condition["uvIndex"]),
+            visibility=int(current_condition["visibility"]),
+            forecast_days=forecast_days,
+            last_updated=datetime.now().isoformat()
+        )
+        
+        return parsed_data
+        
+    except (KeyError, IndexError, ValidationError) as e:
+        raise ValueError(f"Failed to parse weather data: {str(e)}")
 
 
 async def get_weather_data(city: str, db: Session) -> Tuple[Dict[str, Any], bool]:
@@ -47,13 +108,20 @@ async def get_weather_data(city: str, db: Session) -> Tuple[Dict[str, Any], bool
                 timeout=10.0
             )
             response.raise_for_status()
-            api_data = response.json()
+            api_response = response.json()
+            
+        # Parse die API Response in ein strukturiertes Objekt
+        parsed_weather = parse_weather_response(city, api_response)
+        api_data = parsed_weather.model_dump()  # Konvertiere zu Dict für DB-Speicherung
+        
     except httpx.HTTPStatusError as e:
         if e.response.status_code == 404:
             raise ValueError(f"City '{city}' not found in weather API")
         raise Exception(f"Weather API error: {e.response.status_code} - {e.response.text}")
     except httpx.RequestError as e:
         raise Exception(f"Network error while fetching weather: {str(e)}")
+    except ValueError as e:
+        raise Exception(f"Failed to parse weather data: {str(e)}")
     except Exception as e:
         raise Exception(f"Unexpected error: {str(e)}")
     
