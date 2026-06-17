@@ -39,7 +39,7 @@ def parse_weather_response(city: str, api_response: Dict[str, Any]) -> ParsedWea
                     maxtemp_C=day_data["maxtempC"],
                     mintemp_C=day_data["mintempC"],
                     avgtemp_C=day_data["avgtempC"],
-                    condition= day_data["hourly"][0]["weatherDesc"][0]["value"] if day_data["hourly"] and day_data["hourly"][0]["weatherDesc"] else "Unknown",
+                    condition= str(day_data["hourly"][0]["weatherDesc"][0]["value"]).strip().lower() if day_data["hourly"] and day_data["hourly"][0]["weatherDesc"] else "Unknown",
                 )
                 forecast_days.append(day_weather)
             except (KeyError, IndexError):
@@ -51,7 +51,7 @@ def parse_weather_response(city: str, api_response: Dict[str, Any]) -> ParsedWea
             country=nearest_area["country"][0]["value"],
             temperature=float(current_condition["temp_C"]),
             feels_like=float(current_condition["FeelsLikeC"]),
-            condition=current_condition["weatherDesc"][0]["value"],
+            condition=str(current_condition["weatherDesc"][0]["value"]).strip().lower(),
             humidity=int(current_condition["humidity"]),
             wind_speed=float(current_condition["windspeedKmph"]),
             wind_direction=current_condition["winddir16Point"],
