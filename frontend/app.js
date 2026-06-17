@@ -111,7 +111,6 @@ function updateUI(data) {
 // ==================== UTILITY FUNCTIONS ====================
 
 function selectIcon(weatherCondition) {
-    console.log(weatherCondition);
     switch(weatherCondition) {
         case "sunny":
         case "clear":
