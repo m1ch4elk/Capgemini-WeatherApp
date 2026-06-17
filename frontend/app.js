@@ -66,23 +66,21 @@ async function fetchWeather(city) {
  */
 function updateUI(data) {
     const weatherData = data.data;
-    const currentCondition = weatherData.current_condition[0];
-    const nearestArea = weatherData.nearest_area[0];
-    const weatherDays = weatherData.weather;
+    const forecastDays = weatherData.forecast_days;
 
     // Update current weather
-    document.getElementById('cityName').textContent = nearestArea.areaName[0].value;
-    document.getElementById('country').textContent = nearestArea.country[0].value;
-    document.getElementById('weatherDesc').textContent = currentCondition.weatherDesc[0].value;
-    document.getElementById('weatherIcon').src = currentCondition.weatherIconUrl[0].value;
-    document.getElementById('feelsLike').textContent = `Gefühlte Temperatur: ${currentCondition.FeelsLikeC}°C`;
-    document.getElementById('currentTemp').textContent = `${currentCondition.temp_C}°C`;
-    document.getElementById('maxTemp').textContent = `${weatherDays[0].maxtempC}°C`;
-    document.getElementById('minTemp').textContent = `${weatherDays[0].mintempC}°C`;
-    document.getElementById('windDirection').textContent = currentCondition.winddir16Point;
-    document.getElementById('windSpeed').textContent = `${currentCondition.windspeedKmph} km/h`;
-    document.getElementById('humidity').textContent = `${currentCondition.humidity}%`;
-    document.getElementById('visibility').textContent = `${currentCondition.visibility} km`;
+    document.getElementById('cityName').textContent = weatherData.city;
+    document.getElementById('country').textContent = weatherData.country;
+    document.getElementById('weatherDesc').textContent = weatherData.condition;
+    document.getElementById('weatherIcon').src = selectIcon(weatherData.condition);
+    document.getElementById('feelsLike').textContent = `Gefühlte Temperatur: ${weatherData.feels_like}°C`;
+    document.getElementById('currentTemp').textContent = `${weatherData.temperature}°C`;
+    // document.getElementById('maxTemp').textContent = `${weatherDays[0].maxtempC}°C`;
+    // document.getElementById('minTemp').textContent = `${weatherDays[0].mintempC}°C`;
+    document.getElementById('windDirection').textContent = weatherData.wind_direction;
+    document.getElementById('windSpeed').textContent = `${weatherData.wind_speed} km/h`;
+    document.getElementById('humidity').textContent = `${weatherData.humidity}%`;
+    document.getElementById('visibility').textContent = `${weatherData.visibility} km`;
 
     // Update cache status
     const cacheStatus = document.getElementById('cacheStatus');
@@ -96,19 +94,12 @@ function updateUI(data) {
     document.getElementById('updateTime').textContent = `Aktualisiert: ${formatTime(new Date(data.cached_at))}`;
 
     // Update forecast for 3 days
-    for (let i = 0; i < 3 && i < weatherDays.length; i++) {
-        const day = weatherDays[i];
+    for (let i = 0; i < 3 && i < forecastDays.length; i++) {
+        const day = forecastDays[i];
         document.getElementById(`forecastDate${i}`).textContent = formatDate(day.date);
-        
-        // Try to get icon from hourly data
-        if (day.hourly && day.hourly.length > 0) {
-            document.getElementById(`forecastIcon${i}`).src = day.hourly[0].weatherIconUrl[0].value;
-        } else {
-            document.getElementById(`forecastIcon${i}`).src = '';
-        }
-        
-        document.getElementById(`forecastMaxTemp${i}`).textContent = `${day.maxtempC}°C`;
-        document.getElementById(`forecastMinTemp${i}`).textContent = `${day.mintempC}°C`;
+        document.getElementById(`forecastIcon${i}`).src = selectIcon(day.condition);        
+        document.getElementById(`forecastMaxTemp${i}`).textContent = `${day.max_temp}°C`;
+        document.getElementById(`forecastMinTemp${i}`).textContent = `${day.min_temp}°C`;
     }
 
     // Show sections
@@ -118,6 +109,21 @@ function updateUI(data) {
 }
 
 // ==================== UTILITY FUNCTIONS ====================
+
+function selectIcon(weatherCondition) {
+    switch(weatherCondition) {
+        case "Sunny":
+            return "assets/sun.svg";
+        case "Cloudy":
+            return "assets/cloud.svg";
+        case "Rainy":
+            return "assets/rain.svg";
+        case "Partly cloudy":
+            return "assets/cloud.svg";
+        default:
+            return "assets/rain.svg";
+    }
+}
 
 /**
  * Format date string to readable format
