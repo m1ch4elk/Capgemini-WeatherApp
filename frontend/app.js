@@ -75,8 +75,8 @@ function updateUI(data) {
     document.getElementById('weatherIcon').src = selectIcon(weatherData.condition);
     document.getElementById('feelsLike').textContent = `Gefühlte Temperatur: ${weatherData.feels_like}°C`;
     document.getElementById('currentTemp').textContent = `${weatherData.temperature}°C`;
-    // document.getElementById('maxTemp').textContent = `${weatherDays[0].maxtempC}°C`;
-    // document.getElementById('minTemp').textContent = `${weatherDays[0].mintempC}°C`;
+    document.getElementById('maxTemp').textContent = `${forecastDays[0].max_temp}°C`;
+    document.getElementById('minTemp').textContent = `${forecastDays[0].min_temp}°C`;
     document.getElementById('windDirection').textContent = weatherData.wind_direction;
     document.getElementById('windSpeed').textContent = `${weatherData.wind_speed} km/h`;
     document.getElementById('humidity').textContent = `${weatherData.humidity}%`;
@@ -93,8 +93,8 @@ function updateUI(data) {
     }
     document.getElementById('updateTime').textContent = `Aktualisiert: ${formatTime(new Date(data.cached_at))}`;
 
-    // Update forecast for 3 days
-    for (let i = 0; i < 3 && i < forecastDays.length; i++) {
+    // Update forecast for 2 days
+    for (let i = 1; i < 3 && i < forecastDays.length; i++) {
         const day = forecastDays[i];
         document.getElementById(`forecastDate${i}`).textContent = formatDate(day.date);
         document.getElementById(`forecastIcon${i}`).src = selectIcon(day.condition);        
@@ -111,17 +111,19 @@ function updateUI(data) {
 // ==================== UTILITY FUNCTIONS ====================
 
 function selectIcon(weatherCondition) {
+    console.log(weatherCondition);
     switch(weatherCondition) {
-        case "Sunny":
+        case "sunny":
+        case "clear":
             return "assets/sun.svg";
-        case "Cloudy":
+        case "cloudy":
             return "assets/cloud.svg";
-        case "Rainy":
+        case "rainy":
             return "assets/rain.svg";
-        case "Partly cloudy":
-            return "assets/cloud.svg";
+        case "partly cloudy":
+            return "assets/partlyCloudy.svg";
         default:
-            return "assets/rain.svg";
+            return "assets/weatherCondition_fallback.svg";
     }
 }
 
