@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App - Wetterbericht</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Weather App</h1>
+            <p class="subtitle">Aktuelle Wetterdaten für deine Stadt</p>
+        </header>
+
+        <!-- Search Section -->
+        <section class="search-section">
+            <form id="searchForm" class="search-form">
+                <div class="search-input-group">
+                    <input 
+                        type="text" 
+                        id="cityInput" 
+                        class="search-input" 
+                        placeholder="Geben Sie einen Stadtnamen ein..." 
+                        required
+                    >
+                    <button type="submit" class="search-btn">Suchen</button>
+                </div>
+            </form>
+            
+            <!-- Error Message Display -->
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+        </section>
+
+        <!-- Loading Indicator -->
+        <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+            <div class="spinner"></div>
+            <p>Wetterdaten werden geladen...</p>
+        </div>
+
+        <!-- Current Weather Section -->
+        <section id="currentWeather" class="weather-section" style="display: none;">
+            <div class="weather-header">
+                <div class="location-info">
+                    <h2 id="cityName" class="city-name"></h2>
+                    <p id="country" class="country"></p>
+                </div>
+                <div class="cache-info">
+                    <span id="cacheStatus" class="cache-badge"></span>
+                    <p id="updateTime" class="update-time"></p>
+                </div>
+            </div>
+
+            <div class="current-weather-grid">
+                <!-- Weather Description Card -->
+                <div class="weather-card main-card">
+                    <div class="weather-icon-wrapper">
+                        <img id="weatherIcon" src="" alt="Wetterbedingung" class="weather-icon">
+                    </div>
+                    <div class="weather-description">
+                        <h3 id="weatherDesc" class="weather-desc"></h3>
+                        <p id="feelsLike" class="feels-like"></p>
+                    </div>
+                </div>
+
+                <!-- Temperature Card -->
+                <div class="weather-card">
+                    <div class="card-content">
+                        <h4 class="card-label">Temperatur</h4>
+                        <div class="temp-display">
+                            <div class="temp-item">
+                                <span class="temp-label">Aktuell</span>
+                                <span id="currentTemp" class="temp-value"></span>
+                            </div>
+                            <div class="temp-item">
+                                <span class="temp-label">Max</span>
+                                <span id="maxTemp" class="temp-value"></span>
+                            </div>
+                            <div class="temp-item">
+                                <span class="temp-label">Min</span>
+                                <span id="minTemp" class="temp-value"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wind Card -->
+                <div class="weather-card">
+                    <div class="card-content">
+                        <h4 class="card-label">Wind</h4>
+                        <div class="wind-display">
+                            <div class="wind-item">
+                                <span class="wind-label">Richtung</span>
+                                <span id="windDirection" class="wind-value"></span>
+                            </div>
+                            <div class="wind-item">
+                                <span class="wind-label">Geschwindigkeit</span>
+                                <span id="windSpeed" class="wind-value"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Humidity & Pressure Card -->
+                <div class="weather-card">
+                    <div class="card-content">
+                        <h4 class="card-label">Weitere Infos</h4>
+                        <div class="info-display">
+                            <div class="info-item">
+                                <span class="info-label">Luftfeuchtigkeit</span>
+                                <span id="humidity" class="info-value"></span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Sichtweite</span>
+                                <span id="visibility" class="info-value"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Forecast Section -->
+        <section id="forecastSection" class="forecast-section" style="display: none;">
+            <h3 class="forecast-title">3-Tage Vorhersage</h3>
+            <div id="forecastContainer" class="forecast-grid">
+                <!-- Forecast cards will be dynamically inserted here -->
+            </div>
+        </section>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state">
+            <p class="empty-state-text">Geben Sie einen Stadtnamen ein und klicken Sie auf "Suchen", um Wetterdaten anzuzeigen.</p>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
