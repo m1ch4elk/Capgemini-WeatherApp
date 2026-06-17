@@ -123,9 +123,40 @@
 
         <!-- Forecast Section -->
         <section id="forecastSection" class="forecast-section" style="display: none;">
-            <h3 class="forecast-title">3-Tage Vorhersage</h3>
+            <h3 class="forecast-title">2-Tage Vorhersage</h3>
             <div id="forecastContainer" class="forecast-grid">
-                <!-- Forecast cards will be dynamically inserted here -->
+
+                <!-- Day 2 -->
+                <div class="forecast-card" id="forecastCard1">
+                    <div class="forecast-date" id="forecastDate1"></div>
+                    <img id="forecastIcon1" src="" alt="Wetter" class="forecast-icon">
+                    <div class="forecast-temps">
+                        <div class="forecast-temp">
+                            <span class="forecast-temp-label">Max</span>
+                            <span id="forecastMaxTemp1" class="forecast-temp-value"></span>
+                        </div>
+                        <div class="forecast-temp">
+                            <span class="forecast-temp-label">Min</span>
+                            <span id="forecastMinTemp1" class="forecast-temp-value"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Day 3 -->
+                <div class="forecast-card" id="forecastCard2">
+                    <div class="forecast-date" id="forecastDate2"></div>
+                    <img id="forecastIcon2" src="" alt="Wetter" class="forecast-icon">
+                    <div class="forecast-temps">
+                        <div class="forecast-temp">
+                            <span class="forecast-temp-label">Max</span>
+                            <span id="forecastMaxTemp2" class="forecast-temp-value"></span>
+                        </div>
+                        <div class="forecast-temp">
+                            <span class="forecast-temp-label">Min</span>
+                            <span id="forecastMinTemp2" class="forecast-temp-value"></span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 

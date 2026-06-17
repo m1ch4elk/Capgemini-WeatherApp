@@ -23,16 +23,12 @@ async function handleSearch(e) {
     e.preventDefault();
     const city = cityInput.value.trim();
 
-    // Validation
     if (!city) {
         showError('Bitte geben Sie einen Stadtnamen ein.');
         return;
     }
 
-    // Clear previous errors
     clearError();
-
-    // Fetch weather data
     await fetchWeather(city);
 }
 
@@ -41,28 +37,21 @@ async function handleSearch(e) {
  */
 async function fetchWeather(city) {
     try {
-        // Show loading state
         showLoading(true);
         hideAllSections();
 
-        // Make API request
         const response = await fetch(`${API_ENDPOINT}/${encodeURIComponent(city)}`);
 
-        // Handle different response statuses
         if (!response.ok) {
             if (response.status === 404) {
-                throw new Error(`Stadt "${city}" nicht gefunden. Bitte überprüfen Sie den Namen.`);
-            } else if (response.status === 500) {
-                throw new Error('Fehler beim Abrufen der Wetterdaten. Bitte versuchen Sie später erneut.');
+                throw new Error(`Stadt "${city}" nicht gefunden.`);
             } else {
-                throw new Error(`API-Fehler: ${response.status}`);
+                throw new Error('Fehler beim Abrufen der Wetterdaten.');
             }
         }
 
         const data = await response.json();
-
-        // Process and display data
-        processWeatherData(data);
+        updateUI(data);
         showLoading(false);
 
     } catch (error) {
@@ -73,155 +62,45 @@ async function fetchWeather(city) {
 }
 
 /**
- * Process weather data and update UI
+ * Update UI with weather data
  */
-function processWeatherData(data) {
+function updateUI(data) {
     const weatherData = data.data;
-    const currentCondition = weatherData.current_condition[0];
-    const nearestArea = weatherData.nearest_area[0];
-    const weatherDays = weatherData.weather;
+    const forecastDays = weatherData.forecast_days;
 
     // Update current weather
-    updateCurrentWeather(currentCondition, nearestArea, data.cached_at, data.from_cache);
+    document.getElementById('cityName').textContent = weatherData.city;
+    document.getElementById('country').textContent = weatherData.country;
+    document.getElementById('weatherDesc').textContent = weatherData.condition;
+    document.getElementById('weatherIcon').src = selectIcon(weatherData.condition);
+    document.getElementById('feelsLike').textContent = `Gefühlte Temperatur: ${weatherData.feels_like}°C`;
+    document.getElementById('currentTemp').textContent = `${weatherData.temperature}°C`;
+    document.getElementById('maxTemp').textContent = `${forecastDays[0].max_temp}°C`;
+    document.getElementById('minTemp').textContent = `${forecastDays[0].min_temp}°C`;
+    document.getElementById('windDirection').textContent = weatherData.wind_direction;
+    document.getElementById('windSpeed').textContent = `${weatherData.wind_speed} km/h`;
+    document.getElementById('humidity').textContent = `${weatherData.humidity}%`;
+    document.getElementById('visibility').textContent = `${weatherData.visibility} km`;
 
-    // Update forecast
-    updateForecast(weatherDays);
-
-    // Show sections
-    currentWeatherSection.style.display = 'block';
-    forecastSection.style.display = 'block';
-    emptyState.style.display = 'none';
-}
-
-/**
- * Update current weather section
- */
-function updateCurrentWeather(currentCondition, nearestArea, cachedAt, fromCache) {
-    // Location info
-    document.getElementById('cityName').textContent = nearestArea.areaName[0].value;
-    document.getElementById('country').textContent = nearestArea.country[0].value;
-
-    // Weather icon and description
-    const weatherDesc = currentCondition.weatherDesc[0].value;
-    document.getElementById('weatherDesc').textContent = weatherDesc;
-    document.getElementById('weatherIcon').src = currentCondition.weatherIconUrl[0].value;
-    document.getElementById('weatherIcon').alt = weatherDesc;
-
-    // Feels like temperature
-    const feelsLike = `Gefühlte Temperatur: ${currentCondition.FeelsLikeC}°C`;
-    document.getElementById('feelsLike').textContent = feelsLike;
-
-    // Current temperature (from current_condition)
-    document.getElementById('currentTemp').textContent = `${currentCondition.temp_C}°C`;
-
-    // Get today's data for min/max temps (from weather[0])
-    const todayWeather = getTodayWeatherData();
-    if (todayWeather) {
-        document.getElementById('maxTemp').textContent = `${todayWeather.maxtempC}°C`;
-        document.getElementById('minTemp').textContent = `${todayWeather.mintempC}°C`;
-    }
-
-    // Wind
-    document.getElementById('windDirection').textContent = currentCondition.winddir16Point;
-    document.getElementById('windSpeed').textContent = `${currentCondition.windspeedKmph} km/h`;
-
-    // Additional info
-    document.getElementById('humidity').textContent = `${currentCondition.humidity}%`;
-    document.getElementById('visibility').textContent = `${currentCondition.visibility} km`;
-
-    // Cache status
+    // Update cache status
     const cacheStatus = document.getElementById('cacheStatus');
-    if (fromCache) {
+    if (data.from_cache) {
         cacheStatus.textContent = '📦 Aus Cache';
         cacheStatus.className = 'cache-badge cached';
     } else {
         cacheStatus.textContent = '🔄 Live Daten';
         cacheStatus.className = 'cache-badge fresh';
     }
+    document.getElementById('updateTime').textContent = `Aktualisiert: ${formatTime(new Date(data.cached_at))}`;
 
-    // Update time
-    const updateTime = new Date(cachedAt);
-    const formattedTime = formatTime(updateTime);
-    document.getElementById('updateTime').textContent = `Aktualisiert: ${formattedTime}`;
-}
-
-/**
- * Get today's weather data from the weather array
- */
-function getTodayWeatherData() {
-    // We need to get data from the API response's weather array
-    // This is called from the fetch response, so we need to pass it
-    // For now, we'll store it as a global during fetch
-    return window.todayWeatherData || null;
-}
-
-/**
- * Update forecast section
- */
-function updateForecast(weatherDays) {
-    const forecastContainer = document.getElementById('forecastContainer');
-    forecastContainer.innerHTML = '';
-
-    // Show only 3 days of forecast
-    const forecastDays = weatherDays.slice(0, 3);
-
-    forecastDays.forEach(day => {
-        const forecastCard = createForecastCard(day);
-        forecastContainer.appendChild(forecastCard);
-    });
-}
-
-/**
- * Create a forecast card element
- */
-function createForecastCard(day) {
-    const card = document.createElement('div');
-    card.className = 'forecast-card';
-
-    // Format date
-    const dateStr = formatDate(day.date);
-
-    // Get weather icon from hourly data if available
-    let iconUrl = '';
-    if (day.hourly && day.hourly.length > 0) {
-        iconUrl = day.hourly[0].weatherIconUrl[0].value;
+    // Update forecast for 2 days
+    for (let i = 1; i < 3 && i < forecastDays.length; i++) {
+        const day = forecastDays[i];
+        document.getElementById(`forecastDate${i}`).textContent = formatDate(day.date);
+        document.getElementById(`forecastIcon${i}`).src = selectIcon(day.condition);        
+        document.getElementById(`forecastMaxTemp${i}`).textContent = `${day.max_temp}°C`;
+        document.getElementById(`forecastMinTemp${i}`).textContent = `${day.min_temp}°C`;
     }
-
-    card.innerHTML = `
-        <div class="forecast-date">${dateStr}</div>
-        ${iconUrl ? `<img src="${iconUrl}" alt="Wetter" class="forecast-icon">` : ''}
-        <div class="forecast-temps">
-            <div class="forecast-temp">
-                <span class="forecast-temp-label">Max</span>
-                <span class="forecast-temp-value">${day.maxtempC}°C</span>
-            </div>
-            <div class="forecast-temp">
-                <span class="forecast-temp-label">Min</span>
-                <span class="forecast-temp-value">${day.mintempC}°C</span>
-            </div>
-        </div>
-    `;
-
-    return card;
-}
-
-/**
- * Modified processWeatherData to store today's data
- */
-function processWeatherDataEnhanced(data) {
-    const weatherData = data.data;
-    const currentCondition = weatherData.current_condition[0];
-    const nearestArea = weatherData.nearest_area[0];
-    const weatherDays = weatherData.weather;
-
-    // Store today's weather data for use in updateCurrentWeather
-    window.todayWeatherData = weatherDays[0];
-
-    // Update current weather
-    updateCurrentWeather(currentCondition, nearestArea, data.cached_at, data.from_cache);
-
-    // Update forecast
-    updateForecast(weatherDays);
 
     // Show sections
     currentWeatherSection.style.display = 'block';
@@ -229,12 +108,23 @@ function processWeatherDataEnhanced(data) {
     emptyState.style.display = 'none';
 }
 
-// Override the original processWeatherData to use the enhanced version
-function processWeatherData(data) {
-    processWeatherDataEnhanced(data);
-}
-
 // ==================== UTILITY FUNCTIONS ====================
+
+function selectIcon(weatherCondition) {
+    switch(weatherCondition) {
+        case "sunny":
+        case "clear":
+            return "assets/sun.svg";
+        case "cloudy":
+            return "assets/cloud.svg";
+        case "rainy":
+            return "assets/rain.svg";
+        case "partly cloudy":
+            return "assets/partlyCloudy.svg";
+        default:
+            return "assets/weatherCondition_fallback.svg";
+    }
+}
 
 /**
  * Format date string to readable format
@@ -259,7 +149,6 @@ function formatTime(date) {
 function showError(message) {
     errorMessage.textContent = message;
     errorMessage.style.display = 'block';
-    errorMessage.scrollIntoView({ behavior: 'smooth' });
 }
 
 /**
@@ -287,5 +176,4 @@ function hideAllSections() {
 }
 
 // ==================== INITIALIZATION ====================
-// Show empty state on load
 emptyState.style.display = 'flex';
