@@ -93,8 +93,8 @@ function updateUI(data) {
     }
     document.getElementById('updateTime').textContent = `Aktualisiert: ${formatTime(new Date(data.cached_at))}`;
 
-    // Update forecast for 2 days
-    for (let i = 1; i < 3 && i < forecastDays.length; i++) {
+    // Update forecast for 1 days
+    for (let i = 1; i < 2; i++) {
         const day = forecastDays[i];
         document.getElementById(`forecastDate${i}`).textContent = formatDate(day.date);
         document.getElementById(`forecastIcon${i}`).src = selectIcon(day.condition);        
