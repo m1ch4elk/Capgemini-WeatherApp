@@ -115,10 +115,6 @@ function selectIcon(weatherCondition) {
         case "sunny":
         case "clear":
             return "assets/sun.svg";
-        case "cloudy":
-            return "assets/cloud.svg";
-        case "rainy":
-            return "assets/rain.svg";
         case "partly cloudy":
             return "assets/partlyCloudy.svg";
         default:
