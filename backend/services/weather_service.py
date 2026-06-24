@@ -83,24 +83,6 @@ async def get_weather_data(city: str, db: Session) -> Tuple[Dict[str, Any], bool
     Raises:
         Exception: Bei API-Fehler oder ungültigem Stadtnamen
     """
-    
-    # Versuche, Daten aus der DB zu laden
-    db_entry = db.query(WeatherData).filter(WeatherData.city == city.lower()).first()
-    
-    # Prüfe ob Daten noch aktuell sind (nicht älter als CACHE_TTL_HOURS)
-    if db_entry:
-        time_diff = datetime.utcnow() - db_entry.updated_at
-        if time_diff < timedelta(hours=CACHE_TTL_HOURS):
-            print(f"Cache hit for {city}: {time_diff.total_seconds():.1f} seconds old")
-            return {
-                "city": city,
-                "data": db_entry.data,
-                "from_cache": True,
-                "cached_at": db_entry.updated_at.isoformat()
-            }, True
-    
-    # Cache miss oder abgelaufen - neue Daten von API abrufen
-    print(f"Cache miss/expired for {city}, fetching from API...")
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(
@@ -125,28 +107,10 @@ async def get_weather_data(city: str, db: Session) -> Tuple[Dict[str, Any], bool
     except Exception as e:
         raise Exception(f"Unexpected error: {str(e)}")
     
-    # Speichere/Update Daten in der Datenbank
-    db_entry = db.query(WeatherData).filter(WeatherData.city == city.lower()).first()
-    
-    if db_entry:
-        # Update existierenden Eintrag
-        db_entry.data = api_data
-        db_entry.updated_at = datetime.utcnow()
-    else:
-        # Erstelle neuen Eintrag
-        db_entry = WeatherData(
-            city=city.lower(),
-            data=api_data,
-            updated_at=datetime.utcnow()
-        )
-        db.add(db_entry)
-    
-    db.commit()
-    db.refresh(db_entry)
     
     return {
         "city": city,
         "data": api_data,
         "from_cache": False,
-        "cached_at": db_entry.updated_at.isoformat()
+        "cached_at": datetime.now().isoformat()
     }, False
