@@ -8,7 +8,7 @@
 
 body {
     font-family: Arial, sans-serif;
-    background-color: #f0f4f8;
+    background-color: #110240;
     color: #333;
     line-height: 1.6;
     padding: 20px;
@@ -29,7 +29,7 @@ body {
 .header h1 {
     font-size: 2.5rem;
     margin-bottom: 8px;
-    color: #0f3460;
+    color: #ddd;
 }
 
 .subtitle {
@@ -193,7 +193,7 @@ body {
     display: flex;
     align-items: center;
     gap: 20px;
-    background-color: #0f3460;
+    background-color: #0472f5;
     color: white;
     padding: 20px;
 }
